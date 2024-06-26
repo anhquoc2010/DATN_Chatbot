@@ -2,11 +2,10 @@ version: '3.8'
 
 services:
   fastapi_chatbot:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    restart: always
+    build: .
     ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-
+      - "3080:3080"
+    env_file:
+      - .env
+    command: sh -c 'uvicorn main:app --host 0.0.0.0 --port 3080'
