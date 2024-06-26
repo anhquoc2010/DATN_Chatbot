@@ -1,0 +1,35 @@
+# ignore .env file
+.env
+
+# ignore __pycache__ folder
+
+__pycache__/
+
+# ignore .vscode folder
+
+.vscode/
+
+# ignore .pytest_cache folder
+
+.pytest_cache/
+
+# ignore .mypy_cache folder
+
+.mypy_cache/
+
+# ignore .git folder
+
+.git/
+
+
+# ignore .idea folder
+
+.idea/
+
+# ignore .vs folder
+
+.vs/
+
+# ignore .venv folder
+
+.venv/
