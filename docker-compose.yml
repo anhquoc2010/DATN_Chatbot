@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  backend_app-network:
+    external: true
+
 services:
   fastapi_chatbot:
     restart: always
@@ -8,4 +12,6 @@ services:
       - "3080:3080"
     env_file:
       - .env
+    networks:
+      - backend_app-network
     command: sh -c 'uvicorn main:app --host 0.0.0.0 --port 3080'
