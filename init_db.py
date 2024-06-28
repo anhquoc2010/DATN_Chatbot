@@ -21,16 +21,30 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 async def _add_tables():
     try:
         async with database.get_async_engine().begin() as conn:
-            # Drop and create specific tables
+            # check if tables exist
             try:
-                await conn.run_sync(Thread.__table__.drop)
-                await conn.run_sync(Message.__table__.drop)
+                if await conn.run_sync(Thread.__table__.exists):
+                    print("Thread table exists")
+                    await conn.run_sync(Thread.__table__.drop)
+            except Exception as e:
+                print("Error:", e)
+                pass
+
+            try:
+                if await conn.run_sync(Message.__table__.exists):
+                    print("Message table exists")   
+                    await conn.run_sync(Message.__table__.drop)
             except Exception as e:
                 print("Error:", e)
                 pass
 
             try:
                 await conn.run_sync(Thread.__table__.create)
+            except Exception as e:
+                print("Error:", e)
+                pass
+
+            try:
                 await conn.run_sync(Message.__table__.create)
             except Exception as e:
                 print("Error:", e)
@@ -137,4 +151,4 @@ async def insert_data():
         await session.close()
         
 # Run the coroutine
-# asyncio.run(insert_data())
+asyncio.run(insert_data())
