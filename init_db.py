@@ -126,7 +126,7 @@ async def insert_data():
         for thread in threads_data:
             thread_in = ThreadCreate(**thread)
             await crud_thread.create(session, thread_in)
-
+        await session.commit()
         for message in messages_data:
             message_in = MessageCreate(**message)
             await crud_message.create(session, message_in)
@@ -137,4 +137,4 @@ async def insert_data():
         await session.close()
         
 # Run the coroutine
-asyncio.run(insert_data())
+# asyncio.run(insert_data())
