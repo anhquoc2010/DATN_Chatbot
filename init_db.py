@@ -21,9 +21,14 @@ logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 async def _add_tables():
     try:
         async with database.get_async_engine().begin() as conn:
-            # drop all tables
-            await conn.run_sync(Base.metadata.drop_all)
-            await conn.run_sync(Base.metadata.create_all)  # Use Base.metadata.create_all
+            # drop all tables, except organizations and campaigns
+            for table in reversed(Base.metadata.sorted_tables):
+                if table.name not in ["organizations", "campaigns", "organization", "campaign"]:
+                    await conn.run_sync(table.drop)
+            # create all tables
+            for table in Base.metadata.sorted_tables:
+                if table.name not in ["organizations", "campaigns", "organization", "campaign"]:
+                    await conn.run_sync(table.create)
     except Exception as e:
         print("Error:", e)
         pass

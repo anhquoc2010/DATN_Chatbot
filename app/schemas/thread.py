@@ -18,7 +18,7 @@
 #     message = relationship("Messages", back_populates="thread")
 
 from typing import Optional
-
+from datetime import datetime
 from pydantic import BaseModel
 
 class ThreadBase(BaseModel):
@@ -34,8 +34,9 @@ class ThreadUpdate(ThreadBase):
     pass
 
 class ThreadOut(ThreadBase):
-    id: int
-
+    id: int 
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
     class Config:
         from_attributes = True
 

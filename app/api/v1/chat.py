@@ -15,7 +15,7 @@ client = OpenAI(
     # This is the default and can be omitted
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
-print(os.environ.get("OPENAI_API_KEY"))
+
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 def generate_response(question: str) -> str:
@@ -39,41 +39,55 @@ def generate_response(question: str) -> str:
 async def chat(
     question: str,
     organization_id: int,
-    user_id: int,
+    user_id: int = 1,
+    is_user: bool = True,
     session: AsyncSession = Depends(get_session)
 ):
-    # Step 1: Generate a response using GPT-3.5
-    response_content = generate_response(question)
-    # check if response is ''
-    if response_content == '':
-        raise HTTPException(status_code=400, detail="Error generating response")
-    else:
-        filters = {
+    filters = {
+        "organization_id": organization_id,
+        "user_id": user_id,
+    }
+    threads = await crud_thread.search(session, offset=0, limit=1, **filters)
+    if not threads:
+        thread_data = {
+            "title": "Thread",
+            "description": "Description",
             "organization_id": organization_id,
             "user_id": user_id,
+            "created_at": dt.datetime.now(),
+            "updated_at": dt.datetime.now(),
         }
-        try:
-            threads = await crud_thread.search(session, offset=0, limit=1, **filters)
-            if not threads:
-                thread_data = {
-                    "title": "Thread",
-                    "description": "Description",
-                    "organization_id": organization_id,
-                    "user_id": user_id,
-                    "created_at": dt.datetime.now(),
-                    "updated_at": dt.datetime.now(),
-                }
-                thread = await crud_thread.create(session, ThreadCreate(**thread_data))
-            else:
-                thread = threads[0]
-            user_message = {
-                "message": question,
-                "thread_id": thread.id,
-                "is_user": True,
-                "is_bot": False,
-            }
-            await crud_message.create(session, MessageCreate(**user_message))
+        thread = await crud_thread.create(session, ThreadCreate(**thread_data))
+    else:
+        thread = threads[0]
+    if is_user:
+        user_message = {
+            "message": question,
+            "thread_id": thread.id,
+            "is_user": True,
+            "is_bot": False,
+        }
+    else:
+        user_message = {
+            "message": question,
+            "thread_id": thread.id,
+            "is_user": False,
+            "is_bot": False,
+        }
 
+    result = await crud_message.create(session, MessageCreate(**user_message))
+    # Step 1: Generate a response using GPT-3.5
+    if is_user:
+        try:
+            response_content = generate_response(question)
+        except Exception as e:
+            print("Error:", e)
+            response_content = ''
+        # check if response is ''
+        if response_content == '':
+            print("No response from Generative AI")
+            response_content = "Xin lỗi, tôi không hiểu câu hỏi của bạn. Bạn có thể đặt câu hỏi khác không?"
+        try:
             bot_message = {
                 "message": response_content,
                 "thread_id": thread.id,
@@ -84,3 +98,5 @@ async def chat(
             return result
         except Exception as e:
             print("Error:", e)
+
+    return result

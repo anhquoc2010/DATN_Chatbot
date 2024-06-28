@@ -9,6 +9,8 @@ from fastapi import Query
 from fastapi import Request
 from app.models.thread import Thread
 from app.schemas.thread import ThreadCreate, ThreadUpdate, ThreadOut
+from app.services.crud.message import crud_message
+from app.schemas.message import MessageCreate, MessageUpdate, MessageOut
 from app.api.deps import (
     get_session
 )
@@ -58,7 +60,7 @@ async def delete_thread(
     thread = await crud_thread.remove(session, id=thread_id)
     return thread
 
-@router.get("/search/", response_model=List[ThreadOut])
+@router.get("/search/")
 async def search_threads(
     request: Request,
     session: AsyncSession = Depends(get_session),
@@ -68,8 +70,19 @@ async def search_threads(
     filters = {key: value for key, value in request.query_params.items() if key not in ['offset', 'limit']}
     threads = await crud_thread.search(session, offset=offset, limit=limit, **filters)
     if not threads:
-        return JSONResponse(status_code=404, content={"message": "No threads found"})
+        return []
     else:
         # sort by created_at, oldest first
         threads = sorted(threads, key=lambda x: x.created_at)
-    return threads
+        latest_threads = []
+        for thread in threads:
+            filter = {'thread_id': thread.id}
+            messages = await crud_message.search(session, offset=0, limit=100, **filter)
+            if messages:
+                # sort by id
+                messages = sorted(messages, key=lambda x: x.id, reverse=True)
+                # add messages to thread(thread has no messages attribute), add messages attribute to thread
+                thread.messages = messages
+                latest_threads.append(thread)
+                print(thread.messages)
+    return latest_threads

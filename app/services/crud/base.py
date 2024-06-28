@@ -113,8 +113,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                             query = query.filter(column_attr == datetime.fromisoformat(value))
                         else:
                             query = query.filter(column_attr == value)
-                
-                query = query.offset(offset).limit(limit)
+                result = await session.execute(query)
+                result = result.scalars().all()
+                total_records = len(result)
+                query = query.offset(offset).limit(total_records)
                 
                 result = await session.execute(query)
                 return result.scalars().all()
