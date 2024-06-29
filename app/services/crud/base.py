@@ -7,6 +7,10 @@ from fastapi.responses import JSONResponse
 import json
 from sqlalchemy.exc import SQLAlchemyError
 from app.services.utils import to_dict
+from app.models.organizations import Organization  # Ensure this is a Pydantic model
+from app.models.campaigns import Campaign
+from app.models.organizations import Organization  # Ensure this is a Pydantic model
+from app.models.campaigns import Campaign
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -123,3 +127,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             except Exception as e:
                 print(e)
                 return []
+        
+    # async def organizations_campaigns(self, session: AsyncSession):
+    #         try:
+    #             query = (
+    #                 select(Organization, Campaign)
+    #                 .join(Organization, Organization.id == Campaign.organization_id)
+    #             )
+    #             print(query)
+    #             result = await session.execute(query)
+    #             result = result.scalars().all()
+    #             print(len(result))
+    #             return result
+    #         except Exception as e:
+    #             print(e)
+    #             return []
